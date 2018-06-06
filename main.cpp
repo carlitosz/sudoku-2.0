@@ -49,6 +49,7 @@ bool validateLevel(string);
 void printErrorAndExit(string);
 void clearStream();
 void checkSolution(char difficulty, GridTable<char>& t);
+void printWelcome();
 
 // ============================================================================
 // Main.
@@ -58,17 +59,8 @@ int main(void) {
     // ========================================================================
     // Welcome menu.
     // ========================================================================
-    cout << "\n\n";
-    cout << FGREY_PURPLE;
-    cout << " * * * * * * * * * * * * * * * * * * ";
-    cout << " Welcome to Sudoku ";
-    cout << " * * * * * * * * * * * * * * * * * * " << RST << endl << endl;
-    cout << endl;
-    cout << FBLACK_GREEN;
-    cout << "Choose your level of difficulty from the following menu";
-    cout << RST;
-    cout << endl << endl;
-    cout << RST;
+    printWelcome();
+
     char c = printMenu();
 
     if (c == 'q') printMsgAndExit();
@@ -248,6 +240,56 @@ void checkSolution(char difficulty, GridTable<char>& t) {
              << RST << endl;
         exit(1);
     }
+}
+
+// ============================================================================
+// printWelcome.
+//
+// Input -> nothing.
+// Output -> nothing.
+// ============================================================================
+void printWelcome() {
+    string len1 = " * * * * * * * * * * * * * * * * * * ";
+    string len2 = " * * * * * * * * * * * * * * * * * * * * * *  ";
+
+    cout << "\n\n";
+    cout << FGREY_PURPLE;
+    cout << len1 << RST;
+    cout << " Welcome to Sudoku ";
+    cout << FGREY_PURPLE;
+    cout << len1 + " " << RST << endl;
+
+    /* Start description */
+    cout << FGREY_PURPLE << " *" << RST;
+    cout << "Welcome to Sudoku version 2.0. This version of the game contains "
+         << "improvements on the back-";
+    cout << FGREY_PURPLE << "* " << RST << endl;
+    cout << FGREY_PURPLE << " *" << RST;
+    cout << "end and the front-end as well. One of the most important "
+         << "improvements is now the ability  ";
+    cout << FGREY_PURPLE << "* " << RST << endl;
+    cout << FGREY_PURPLE << " *" << RST;
+    cout << "to download puzzles from the web instead of having them saved on your "
+         << "computer. Other     ";
+    cout << FGREY_PURPLE << "* " << RST << endl;
+    cout << FGREY_PURPLE << " *" << RST;
+    cout << "changes include: using sorts, hashing, trees, and graphs. This version "
+         << " of Sudoku is just ";
+    cout << FGREY_PURPLE << "* " << RST << endl;
+    cout << FGREY_PURPLE << " *" << RST;  
+    cout << "as fun as the first so test your knowledge and try to solve all"
+         << " the puzzles!!!            ";
+    cout << FGREY_PURPLE << "* " << RST << endl;
+    cout << FGREY_PURPLE << " *" << RST;
+    cout << FGREY_PURPLE << len2 << len2 << RST << endl;
+
+    /* End description */
+
+    cout << FBLACK_GREEN;
+    cout << "Choose your level of difficulty from the following menu";
+    cout << RST;
+    cout << endl << endl;
+    cout << RST;
 }
 
 
