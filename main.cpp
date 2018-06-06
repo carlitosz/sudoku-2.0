@@ -15,6 +15,7 @@
 #include <vector>
 #include <unistd.h>
 #include <stack>
+#include <curl/curl.h>
 using namespace std;
 
 // ============================================================================
@@ -35,7 +36,8 @@ const string CHECKING = "Checking your puzzle for correctness, please wait...";
 // ============================================================================
 // Function prototypes.
 // ============================================================================
-vector<vector<char> > getPuzzleFromFile(char, bool);
+vector<vector<char> > getPuzzle(char, bool);
+string getURL(char, bool);
 int fetchValue();
 void printInvalid();
 stack<char> fetchCoords();
@@ -70,7 +72,7 @@ int main(void) {
     // Load puzzle from file based on difficulty level.
     // ========================================================================
     GridTable<char> table(ROWS, COLS);
-    vector<vector<char> > puzzle = getPuzzleFromFile(c, false);
+    vector<vector<char> > puzzle = getPuzzle(c, false);
     table.populate(puzzle);
 
     // ========================================================================
@@ -223,7 +225,7 @@ void checkSolution(char difficulty, GridTable<char>& t) {
         sleep(2);
 
         // Get solution from file and match against current puzzle progress.
-        vector<vector<char> > solution = getPuzzleFromFile(difficulty, true);
+        vector<vector<char> > solution = getPuzzle(difficulty, true);
         if (t.match(solution) == false) {
             cout << FWHITE_RED << "Sorry, it looks like the puzzle is "
                  << " incorrect. Please skim for errors and check again."
@@ -316,6 +318,16 @@ void printInvalid() {
     cout << FBLACK_RED << "Invalid input, please try again..." << RST << endl;
 }
 
+// ============================================================================
+// Writes downloaded data to a buffer.
+// ============================================================================
+size_t write_data(void *buffer, size_t size, size_t nmemb, void *param) {
+  std::string& text = *static_cast<std::string*>(param);
+  size_t totalsize = size * nmemb;
+  text.append(static_cast<char*>(buffer), totalsize);
+
+  return totalsize;
+}
 
 // ============================================================================
 // getPuzzleFromFile.
@@ -324,56 +336,54 @@ void printInvalid() {
 // Input -> whether to retrieve the solution or not.
 // Output -> An array of ints containing the puzzle.
 // ============================================================================
-vector<vector<char> > getPuzzleFromFile(char difficulty, bool solution = false) {
+vector<vector<char> > getPuzzle(char difficulty, bool solution = false) {
     static vector<vector<char> > puzzle(ROWS, vector<char>(COLS));
-    ifstream readFromFile;
-    string line;
-    string filename;
-    char c;
+    string result;
+    CURL *curl;
+    CURLcode res;
+    string difficultyURL = getURL(difficulty, solution);
+    char url[difficultyURL.length()];
+    strcpy(url, difficultyURL.c_str());
+    char outfilename[FILENAME_MAX] = "./json.zip";
 
-    // Get correct puzzle
-    switch (difficulty) {
-        case 'e':
-            solution ? readFromFile.open("puzzles/easy_solution.txt") :
-                       readFromFile.open("puzzles/easy.txt");
-            break;
-        case 'i':
-            solution ? readFromFile.open("puzzles/intermediate_solution.txt") :
-                       readFromFile.open("puzzles/intermediate.txt");
-            break;
-        case 'd':
-            solution ? readFromFile.open("puzzles/difficult_solution.txt") :
-                       readFromFile.open("puzzles/difficult.txt");
-            break;
-        case 'r':
-            solution ? readFromFile.open("puzzles/expert_solution.txt") :
-                       readFromFile.open("puzzles/expert.txt");
-            break;
-        default:
-            printErrorAndExit(ERROR);
-    }
+    curl = curl_easy_init();
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_CAINFO, "./ca-bundle.crt");
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
 
-    // Check successful open.
-    if (!readFromFile.is_open()) {
-        cout << "Could not read from file.\n\n\n" << endl;
-        printErrorAndExit(ERROR);
-    }
-
-    int row = 0;
-    while (!readFromFile.eof()) {
-        getline(readFromFile, line);
-
-        for (int col = 0; col < line.size(); ++col) {
-            c = line.at(col);
-            if (c == 'x') c = ' ';
-            puzzle[row][col] = c;
+        if (!solution) {
+            cout << endl << endl 
+                 << "Downloading puzzle from the web. . ." << endl;
+            usleep(2000000);
         }
 
-        row++;
+        res = curl_easy_perform(curl);
+
+        curl_easy_cleanup(curl);
+    } else {
+        cout << "Something went wrong, please check that you have an "
+             << "internet connection and restart the game!" << endl;
+        exit(1);
     }
 
-    // Close the file stream.
-    readFromFile.close();
+    int start = 0;
+    int end = 10;
+    int row = 0;
+    do {
+        string rowData = result.substr(start, end);
+        for (int i = 0; i < rowData.size(); ++i) {
+            char c = rowData.at(i);
+            if (c == 'x') c = ' ';
+            puzzle[row][i] = c;
+        }
+        row++;
+        start += 10;
+        end += 10;
+    } while(start < 100);
 
     return puzzle;
 }
@@ -483,4 +493,41 @@ void printErrorAndExit(string message = "") {
 // ============================================================================
 void clearStream() {
     fflush(stdin);
+}
+
+
+// ============================================================================
+// getURL.
+//
+// Input -> the difficulty level.
+// Output -> the URL of the difficulty level.
+// ============================================================================
+string getURL(char difficulty, bool solution = false) {
+    string easy = "http://m.uploadedit.com/bbtc/1528267058303.txt";
+    string easySol = "http://m.uploadedit.com/bbtc/1528253085392.txt";
+    string inter = "http://m.uploadedit.com/bbtc/1528267078101.txt";
+    string interSol = "http://m.uploadedit.com/bbtc/1528267101186.txt";
+    string diff = "http://m.uploadedit.com/bbtc/1528267137564.txt";
+    string diffSol = "http://m.uploadedit.com/bbtc/1528267148727.txt";
+    string expert = "http://m.uploadedit.com/bbtc/1528267163452.txt";
+    string expertSol = "http://m.uploadedit.com/bbtc/1528267187305.txt";
+
+    switch (difficulty) {
+        case 'e':
+            if (solution) return easy;
+            return easySol;
+        case 'i':
+            if (solution) return inter;
+            return interSol;
+        case 'd':
+            if (solution) return diff;
+            return diffSol;            
+        case 'r':
+            if (solution) return expert;
+            return expertSol;
+        default:
+            printErrorAndExit(ERROR);
+    }
+
+    return "";
 }
