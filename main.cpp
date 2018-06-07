@@ -107,6 +107,9 @@ int main(void) {
             case 'p':
                 table.print();
                 break;
+            case 's':
+                cout << "do something." << endl;
+                break;
             case 'c':
                 checkSolution(c, table);
                 break;
@@ -275,8 +278,8 @@ void printWelcome() {
          << "computer. Other     ";
     cout << FGREY_PURPLE << "* " << RST << endl;
     cout << FGREY_PURPLE << " *" << RST;
-    cout << "changes include: using sorts, hashing, trees, and graphs. This version "
-         << " of Sudoku is just ";
+    cout << "changes include: using sorts, hashing, trees, and graphs. This version"
+         << " of Sudoku is just  ";
     cout << FGREY_PURPLE << "* " << RST << endl;
     cout << FGREY_PURPLE << " *" << RST;  
     cout << "as fun as the first so test your knowledge and try to solve all"
@@ -362,12 +365,15 @@ vector<vector<char> > getPuzzle(char difficulty, bool solution = false) {
         }
 
         res = curl_easy_perform(curl);
+        if(CURLE_OK != res) {
+            cout << "Something went wrong!" << endl;
+            cout << "We couldn't fetch the puzzle from the web." << endl;
+            cout << "Please check your internet connection, and try again!" << endl;
+
+            exit(0);
+        }
 
         curl_easy_cleanup(curl);
-    } else {
-        cout << "Something went wrong, please check that you have an "
-             << "internet connection and restart the game!" << endl;
-        exit(1);
     }
 
     int start = 0;
@@ -403,8 +409,9 @@ char printOptions() {
         cout << FBLACK_GREEN << "p)rint the table" << RST << endl;
         cout << FBLACK_GREEN << "e)nter value" << RST << endl;
         cout << FBLACK_GREEN << "c)heck solution" << RST << endl;
+        cout << FBLACK_GREEN << "s)ort puzzle" << RST << endl;
         cout << FBLACK_GREEN << "q)uit game" << RST << endl << endl;
-        cout << FBLACK_GREEN << "Enter choice (p, e, c, q): " << RST;
+        cout << FBLACK_GREEN << "Enter choice (p, e, c, s, q): " << RST;
         cin >> userInput;
     }
 
@@ -422,7 +429,7 @@ bool validateOption(string input) {
     if (input == "") return false;
 
     char c = input.at(0);
-    if (c == 'p' || c == 'e' || c == 'q' || c == 'c') return true;
+    if (c == 'p' || c == 'e' || c == 'q' || c == 'c' || c == 's') return true;
 
     cout << endl << endl << "Invalid input, please try again..." << endl << endl;
     return false;
@@ -505,12 +512,12 @@ void clearStream() {
 string getURL(char difficulty, bool solution = false) {
     string easy = "http://m.uploadedit.com/bbtc/1528267058303.txt";
     string easySol = "http://m.uploadedit.com/bbtc/1528253085392.txt";
-    string inter = "http://m.uploadedit.com/bbtc/1528267078101.txt";
-    string interSol = "http://m.uploadedit.com/bbtc/1528267101186.txt";
-    string diff = "http://m.uploadedit.com/bbtc/1528267137564.txt";
-    string diffSol = "http://m.uploadedit.com/bbtc/1528267148727.txt";
-    string expert = "http://m.uploadedit.com/bbtc/1528267163452.txt";
-    string expertSol = "http://m.uploadedit.com/bbtc/1528267187305.txt";
+    string inter = "http://m.uploadedit.com/bbtc/1528267101186.txt";
+    string interSol = "http://m.uploadedit.com/bbtc/1528267078101.txt";
+    string diff = "http://m.uploadedit.com/bbtc/1528267148727.txt";
+    string diffSol = "http://m.uploadedit.com/bbtc/1528267137564.txt";
+    string expert = "http://m.uploadedit.com/bbtc/1528267187305.txt";
+    string expertSol = "http://m.uploadedit.com/bbtc/1528267163452.txt";
 
     switch (difficulty) {
         case 'e':
